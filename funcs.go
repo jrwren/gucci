@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
@@ -14,12 +16,15 @@ import (
 
 func getFuncMap(t *template.Template) template.FuncMap {
 	f := sprig.TxtFuncMap()
-	delete(f, "env")
 	delete(f, "expandenv")
 
 	f["include"] = include(t)
 	f["shell"] = shell
 	f["toYaml"] = toYaml
+	f["key"] = key
+	f["ls"] = ls
+	f["service"] = service
+	f["services"] = services
 
 	return f
 }
@@ -58,4 +63,33 @@ func toYaml(v interface{}) (string, error) {
 		return "", errors.Wrap(err, "Issue marsahling yaml")
 	}
 	return string(data), nil
+}
+
+func key(k string) string {
+	return os.Getenv(k)
+}
+
+func service(k string) interface{} {
+	return services()[k]
+}
+
+func services() map[string]interface{} {
+	var m map[string]interface{}
+	json.Unmarshal([]byte(os.Getenv("services")), &m)
+	return m
+}
+
+type KVP struct {
+	Name, Value string
+}
+
+func ls(k string) (m []KVP) {
+	vars := os.Environ()
+	for i := range vars {
+		if strings.HasPrefix(vars[i], k) {
+			k, v, _ := strings.Cut(vars[i], "=")
+			m = append(m, KVP{k, v})
+		}
+	}
+	return m
 }
