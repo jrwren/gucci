@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"text/template"
 
@@ -70,17 +71,23 @@ func key(k string) string {
 }
 
 func service(k string) interface{} {
-	return services()[k]
+	ss := services()
+	for i := range ss {
+		if s, ok := ss[i][k]; ok {
+			return s
+		}
+	}
+	return nil
 }
 
-func services() map[string]interface{} {
-	var m map[string]interface{}
+func services() []map[string]interface{} {
+	var m []map[string]interface{}
 	json.Unmarshal([]byte(os.Getenv("services")), &m)
 	return m
 }
 
 type KVP struct {
-	Name, Value string
+	Key, Value string
 }
 
 func ls(k string) (m []KVP) {
@@ -88,6 +95,7 @@ func ls(k string) (m []KVP) {
 	for i := range vars {
 		if strings.HasPrefix(vars[i], k) {
 			k, v, _ := strings.Cut(vars[i], "=")
+			_, k = path.Split(k)
 			m = append(m, KVP{k, v})
 		}
 	}
