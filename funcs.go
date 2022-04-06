@@ -70,14 +70,15 @@ func key(k string) string {
 	return os.Getenv(k)
 }
 
-func service(k string) interface{} {
+func service(k string) []interface{} {
+	var matches []interface{}
 	ss := services()
 	for i := range ss {
-		if s, ok := ss[i][k]; ok {
-			return s
+		if s, ok := ss[i]["Name"]; ok && s == k {
+			matches = append(matches, ss[i])
 		}
 	}
-	return nil
+	return matches
 }
 
 func services() []map[string]interface{} {
