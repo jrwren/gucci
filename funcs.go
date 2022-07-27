@@ -23,6 +23,7 @@ func getFuncMap(t *template.Template) template.FuncMap {
 	f["shell"] = shell
 	f["toYaml"] = toYaml
 	f["key"] = key
+	f["keyOrDefault"] = keyOrDefault
 	f["ls"] = ls
 	f["service"] = service
 	f["services"] = services
@@ -68,6 +69,13 @@ func toYaml(v interface{}) (string, error) {
 
 func key(k string) string {
 	return os.Getenv(k)
+}
+
+func keyOrDefault(k, d string) string {
+	if v, e := os.LookupEnv(k); e {
+		return v
+	}
+	return d
 }
 
 func service(k string) []interface{} {
